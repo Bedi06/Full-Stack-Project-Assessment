@@ -17,10 +17,8 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
 });
-
-app.use(cors());
-app.use(bodyParser.json());
 
 app
   .listen(port, () => {
@@ -85,12 +83,11 @@ app.post("/", async (req, res) => {
     !url ||
     !url.match(/^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]+(&\S+)?$/)
   ) {
-    res.send({
+    return res.status(400).json({
       result: "failure",
-      message: "Video could not be saved",
+      message: "Invalid input. Video could not be saved.",
     });
   }
-
   try {
     const result = await pool.query(
       "INSERT INTO videos (title, url, rating) VALUES ($1, $2, $3) RETURNING id",
@@ -99,15 +96,16 @@ app.post("/", async (req, res) => {
     const newId = result.rows[0].id;
 
     res.status(201).json({ id: newId });
+    console.log(`Inserted new video with ID: ${newId}`);
   } catch (error) {
     console.error("Error inserting new video:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// DELETE "/{id}"
 app.delete("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
+  console.log(req.params.id);
   console.log(`Received DELETE request for video with ID: ${id}`);
 
   try {
