@@ -12,6 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
+      - name: Change to project directory
+        run: cd client
+
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
