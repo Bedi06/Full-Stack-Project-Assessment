@@ -18,7 +18,7 @@ jobs:
           node-version: 20
 
       - name: Change to project directory
-        run: cd client
+        run: cd /home/runner/work/Full-Stack-Project-Assessment/Full-Stack-Project-Assessment/client
 
       - name: check dir
         run: pwd
