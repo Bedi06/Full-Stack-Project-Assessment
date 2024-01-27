@@ -11,22 +11,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
-
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: 20
 
-      - name: Change to project directory
-        run: cd /home/runner/work/Full-Stack-Project-Assessment/Full-Stack-Project-Assessment/client
-
       - name: check dir
         run: pwd
 
       - name: Install Dependencies
+        working-directory: ./client
         run: npm install
 
       - name: Build Website
+        working-directory: ./client
         run: npm run build
 
       - name: Configure AWS Credentials
