@@ -9,7 +9,7 @@ on:
 jobs:
   deploy:
     name: Deploy to EC2 on level-300 branch push
-    runs-on: linux-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the files
