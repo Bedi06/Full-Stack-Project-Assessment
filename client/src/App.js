@@ -58,10 +58,10 @@ function App() {
     }
   };
 
-  const handleSearch = (event) => {
-    const newSearch = event.target.value;
-    setNewSearch(newSearch);
-  };
+  // const handleSearch = (event) => {
+  //   const newSearch = event.target.value;
+  //   setNewSearch(newSearch);
+  // };
 
   return (
     <div className="App">
