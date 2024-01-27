@@ -9,6 +9,7 @@ const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+app.options("*", cors());
 
 // PostgreSQL connection pool
 const pool = new Pool({
@@ -104,28 +105,24 @@ app.post("/", async (req, res) => {
 });
 
 app.delete("/:id", async (req, res) => {
-  const id = parseInt(req.params.id);
-  console.log(req.params.id);
-  console.log(`Received DELETE request for video with ID: ${id}`);
-
+  const id = req.body.id;
   try {
-    const result = await pool.query(
-      "DELETE FROM videos WHERE id = $1 RETURNING id",
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      console.log(`Video with ID ${id} not found`);
+    const deletedVideo = await pool.query("DELETE FROM videos WHERE id=$1", [
+      id,
+    ]);
+    if (!deletedVideo) {
       res.status(404).json({
-        result: "failure",
-        message: "Video not found",
+        message: "There is no video with given data!",
       });
     } else {
-      console.log(`Video with ID ${id} deleted successfully`);
-      res.status(204).send();
+      res.status(200).json({
+        message: "Video removed successfully",
+        isPositive: true,
+      });
     }
-  } catch (error) {
-    console.error("Error deleting video by ID:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+  } catch (err) {
+    res.status(404).json({
+      message: "something went wrong!",
+    });
   }
 });

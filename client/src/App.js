@@ -34,9 +34,6 @@ function App() {
   };
 
   const handleRemove = async (id) => {
-    const updatedVideos = videos.filter((video) => video.id !== id);
-    setVideos(updatedVideos);
-
     try {
       const response = await fetch(`${baseUrl}/${id}`, {
         method: "DELETE",
@@ -56,12 +53,6 @@ function App() {
 
         throw new Error(errorMessage);
       }
-
-      const successData = await response.json(); // Parse success response if available
-      console.log(
-        `Video deleted successfully with ID: ${id}. Server Response:`,
-        successData
-      );
     } catch (error) {
       console.error("Error deleting video:", error.message);
     }
