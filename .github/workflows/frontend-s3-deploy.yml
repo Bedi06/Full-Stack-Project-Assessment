@@ -20,11 +20,14 @@ jobs:
       - name: Change to project directory
         run: cd client
 
+      - name: check dir
+        run: pwd
+
       - name: Install Dependencies
         run: npm install
 
       - name: Build Website
-        run: npm run build clean/src
+        run: npm run build
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
