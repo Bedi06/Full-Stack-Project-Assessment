@@ -1,6 +1,5 @@
 name: Push-to-EC2
 
-# Trigger deployment only on push to main branch
 on:
   push:
     branches:
@@ -13,8 +12,8 @@ jobs:
 
     steps:
       - name: Checkout the files
-        uses: actions/checkout@v2
-
+        uses: actions/checkout@v4
+        
       - name: Deploy to server
         uses: easingthemes/ssh-deploy@main
         env:
@@ -22,3 +21,4 @@ jobs:
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
+
