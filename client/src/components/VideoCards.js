@@ -42,7 +42,7 @@ function VideoCard({ title, url, rating, onRemove }) {
         <button
           type="button"
           className="btn btn-secondary btn-sm remove-button"
-          onClick={() => onRemove(title)}
+          onClick={() => onRemove(videoId)}
         >
           Remove
         </button>
@@ -66,6 +66,9 @@ function VideoCards({ videos, onRemove, search }) {
         return b.rating - a.rating; // Descending order
       }
     });
+
+  console.log("Filtered Videos:", filteredVideos);
+
   return (
     <>
       <button onClick={toggleSortOrder} className="btn btn-secondar">
