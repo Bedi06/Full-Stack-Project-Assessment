@@ -14,9 +14,9 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v4
       - name: Install Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20.x"
 
       - name: check dir
         run: pwd
@@ -34,6 +34,7 @@ jobs:
         uses: burnett01/rsync-deployments@5.1
         with:
           switches: -avzr --delete
+
           path: ./server/server.js
           remote_path: ${{secrets.TARGET_DIR}}
           remote_host: ${{ secrets.HOST_DNS }}
