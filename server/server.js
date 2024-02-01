@@ -30,16 +30,10 @@ app
   .on("error", (err) => {
     console.error("Server error:", err);
   });
+
 app.get("/", async (req, res) => {
-  const { order } = req.query;
-  let orderBy = "upvotes - downvotes DESC";
-
-  if (order === "asc") {
-    orderBy = "upvotes - downvotes ASC";
-  }
-
   try {
-    const result = await pool.query(`SELECT * FROM videos ORDER BY ${orderBy}`);
+    const result = await pool.query("SELECT * FROM videos");
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching videos:", error);
@@ -136,7 +130,6 @@ app.post(
       .isURL({ require_protocol: true })
       .withMessage("Please provide a valid URL.")
       .custom((value) => {
-        // Custom validation: Check if URL is a YouTube URL
         const youtubeRegExp =
           /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
         if (!youtubeRegExp.test(value)) {
@@ -146,7 +139,6 @@ app.post(
       }),
   ],
   async (req, res) => {
-    // Check for errors in the request body
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });

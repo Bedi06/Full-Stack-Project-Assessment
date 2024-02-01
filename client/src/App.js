@@ -9,6 +9,7 @@ const baseUrl = process.env.REACT_APP_API_URL;
 function App() {
   const [videos, setVideos] = useState([]);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const handleAddVideo = (newVideo) => {
     fetch(`${baseUrl}`, {
@@ -60,14 +61,22 @@ function App() {
     }
   };
 
+  const handleSort = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    refreshVideoList();
+  };
+
   useEffect(() => {
     refreshVideoList();
-  }, []);
+  }, [sortOrder]);
 
   return (
     <div className="App">
       <Header search={search} onSearch={(newSearch) => setSearch(newSearch)} />
       <AddVideo onAddVideo={handleAddVideo} />
+      <button onClick={handleSort} className="btn btn-secondary">
+        Sort {sortOrder === "asc" ? "Ascending" : "Descending"}
+      </button>
       <VideoCards videos={videos} onVote={handleVote} />
     </div>
   );
