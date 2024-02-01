@@ -34,6 +34,10 @@ app
 app.get("/", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM videos");
+
+    // Set Content-Type header to application/json
+    res.header("Content-Type", "application/json");
+
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching videos:", error);
@@ -186,12 +190,10 @@ app.delete("/:id", async (req, res) => {
     ]);
 
     if (deletedVideo.rowCount === 0) {
-      // If rowCount is 0, no rows were affected, meaning the video wasn't found
       res.status(404).json({
         message: "Video not found",
       });
     } else {
-      // If rowCount is greater than 0, deletion was successful
       res.status(200).json({
         message: "Video removed successfully",
       });
