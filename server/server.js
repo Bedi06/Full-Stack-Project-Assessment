@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
+const { v4: uuidv4 } = require("uuid");
+
 require("dotenv").config();
 
 const app = express();
@@ -28,14 +30,12 @@ app
   .on("error", (err) => {
     console.error("Server error:", err);
   });
-
-// GET "/"
 app.get("/", async (req, res) => {
   const { order } = req.query;
-  let orderBy = "rating DESC";
+  let orderBy = "upvotes - downvotes DESC";
 
   if (order === "asc") {
-    orderBy = "rating ASC";
+    orderBy = "upvotes - downvotes ASC";
   }
 
   try {
@@ -75,54 +75,139 @@ app.get("/:id", async (req, res) => {
   }
 });
 
-// POST "/"
-app.post("/", async (req, res) => {
-  const { title, url } = req.body;
-
-  if (
-    !title ||
-    !url ||
-    !url.match(/^(https?:\/\/)?(www\.)?youtube\.com\/watch\?v=[\w-]+(&\S+)?$/)
-  ) {
-    return res.status(400).json({
-      result: "failure",
-      message: "Invalid input. Video could not be saved.",
-    });
-  }
+// Update video rating by incrementing upvotes
+app.put("/ratingup/:id", async (req, res) => {
+  const { id } = req.params;
   try {
-    const result = await pool.query(
-      "INSERT INTO videos (title, url, rating) VALUES ($1, $2, $3) RETURNING id",
-      [title, url, 0]
+    const video = await pool.query(
+      "UPDATE videos SET upvotes = upvotes + 1 WHERE id=$1",
+      [id]
     );
-    const newId = result.rows[0].id;
-
-    res.status(201).json({ id: newId });
-    console.log(`Inserted new video with ID: ${newId}`);
+    if (!video.rowCount) {
+      res.status(404).json({
+        message: "There is no video with the given ID!",
+      });
+    } else {
+      res.status(200).json({
+        message: "Upvote successful",
+        isPositive: true,
+      });
+    }
   } catch (error) {
-    console.error("Error inserting new video:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({
+      message: "Something went wrong!",
+    });
   }
 });
 
+// Update video rating by incrementing downvotes
+app.put("/ratingdown/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const video = await pool.query(
+      "UPDATE videos SET downvotes = downvotes + 1 WHERE id=$1",
+      [id]
+    );
+    if (!video.rowCount) {
+      res.status(404).json({
+        message: "There is no video with the given ID!",
+      });
+    } else {
+      res.status(200).json({
+        message: "Downvote successful",
+        isPositive: false,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong!",
+    });
+  }
+});
+
+// POST "/"
+app.post(
+  "/",
+  [
+    body("title").notEmpty().withMessage("Title is required."),
+    body("url")
+      .notEmpty()
+      .withMessage("URL is required.")
+      .isURL({ require_protocol: true })
+      .withMessage("Please provide a valid URL.")
+      .custom((value) => {
+        // Custom validation: Check if URL is a YouTube URL
+        const youtubeRegExp =
+          /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/;
+        if (!youtubeRegExp.test(value)) {
+          throw new Error("URL must be a valid YouTube URL.");
+        }
+        return true;
+      }),
+  ],
+  async (req, res) => {
+    // Check for errors in the request body
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { title, url } = req.body;
+
+    try {
+      // Check if a video with the same URL already exists
+      const existingURL = await pool.query(
+        "SELECT * FROM videos WHERE url=$1",
+        [url]
+      );
+      if (existingURL.rows.length > 0) {
+        return res.status(409).json({
+          message: "A video with this URL already exists.",
+        });
+      }
+
+      const id = uuidv4();
+      // If not, insert a new one
+      await pool.query(
+        "INSERT INTO videos(id, title, url, upvotes, downvotes) VALUES($1, $2, $3, $4, $5)",
+        [id, title, url, 0, 0]
+      );
+      res.status(201).json({
+        message: "New video added successfully.",
+      });
+    } catch (error) {
+      console.error("Error adding new video:", error);
+      res.status(500).json({
+        message: "Something went wrong!",
+      });
+    }
+  }
+);
+
+// DELETE "/{id}"
 app.delete("/:id", async (req, res) => {
-  const id = req.body.id;
+  const id = req.params.id;
+
   try {
     const deletedVideo = await pool.query("DELETE FROM videos WHERE id=$1", [
       id,
     ]);
-    if (!deletedVideo) {
+
+    if (deletedVideo.rowCount === 0) {
+      // If rowCount is 0, no rows were affected, meaning the video wasn't found
       res.status(404).json({
-        message: "There is no video with given data!",
+        message: "Video not found",
       });
     } else {
+      // If rowCount is greater than 0, deletion was successful
       res.status(200).json({
         message: "Video removed successfully",
-        isPositive: true,
       });
     }
   } catch (err) {
-    res.status(404).json({
-      message: "something went wrong!",
+    console.error("Error deleting video:", err);
+    res.status(500).json({
+      message: "Internal Server Error",
     });
   }
 });

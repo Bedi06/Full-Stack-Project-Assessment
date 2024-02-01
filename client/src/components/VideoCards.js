@@ -1,87 +1,36 @@
-import React, { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faThumbsUp, faThumbsDown } from "@fortawesome/free-solid-svg-icons";
+import React, { useState, useMemo } from "react";
+import VideoCard from "./VideoCard";
 
-function VideoCard({ title, url, rating, onRemove }) {
-  const videoId = url.split("v=")[1];
-  const [votes, setVotes] = useState(rating);
-
-  const handleUpVote = () => {
-    setVotes(votes + 1);
-  };
-
-  const handleDownVote = () => {
-    setVotes(votes - 1);
-  };
-
-  return (
-    <div className="video-card">
-      <div className="video-content">
-        <h3 className="video-title">{title}</h3>
-        <div className="video-container">
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}`}
-            title={title}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
-        <div className="video-rating">
-          <p>Rating: {votes}</p>
-          <div className="vote-buttons">
-            <button onClick={handleUpVote}>
-              <FontAwesomeIcon icon={faThumbsUp} />
-            </button>
-            <button onClick={handleDownVote}>
-              <FontAwesomeIcon icon={faThumbsDown} />
-            </button>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm remove-button"
-          onClick={() => onRemove(videoId)}
-        >
-          Remove
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function VideoCards({ videos, onRemove, search }) {
+function VideoCards({ videos, deleteHandler }) {
   const [sortOrder, setSortOrder] = useState("desc");
 
   const toggleSortOrder = () => {
-    setSortOrder(sortOrder === "asc" ? "desc" : "asc"); // Toggle sorting order
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
   };
-  const filteredVideos = videos
-    .filter((video) => video.title.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => {
-      if (sortOrder === "asc") {
-        return a.rating - b.rating; // Ascending order
-      } else {
-        return b.rating - a.rating; // Descending order
-      }
-    });
 
-  console.log("Filtered Videos:", filteredVideos);
+  const sortedVideos = useMemo(() => {
+    return videos.slice().sort((a, b) => {
+      const votesA = a.upvotes - a.downvotes;
+      const votesB = b.upvotes - b.downvotes;
+      return sortOrder === "asc" ? votesA - votesB : votesB - votesA;
+    });
+  }, [videos, sortOrder]);
 
   return (
     <>
-      <button onClick={toggleSortOrder} className="btn btn-secondar">
+      <button onClick={toggleSortOrder} className="btn btn-secondary">
         Sort {sortOrder === "asc" ? "Ascending" : "Descending"}
       </button>
       <div className="video-grid">
-        {filteredVideos.map((video) => (
+        {sortedVideos.map((video) => (
           <VideoCard
             key={video.id}
+            id={video.id}
             title={video.title}
             url={video.url}
-            rating={video.rating}
-            onRemove={onRemove}
+            upvotes={video.upvotes}
+            downvotes={video.downvotes}
+            deleteHandler={() => deleteHandler(video.id)}
           />
         ))}
       </div>

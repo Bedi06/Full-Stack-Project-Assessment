@@ -18,9 +18,19 @@ function AddVideo({ onAddVideo }) {
     if (!title.trim()) {
       console.log("Title is required.");
     } else {
-      console.log("Submitting video:", { title, url });
+      console.log("Submitting video:", {
+        title,
+        url,
+        upvotes: 0,
+        downvotes: 0,
+      });
 
-      onAddVideo({ title, url });
+      onAddVideo({
+        title,
+        url,
+        upvotes: 0,
+        downvotes: 0,
+      });
       setTitle("");
       setUrl("");
     }

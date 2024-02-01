@@ -4,18 +4,11 @@ import Header from "./components/Header";
 import AddVideo from "./components/AddVideo";
 import VideoCards from "./components/VideoCards";
 
-const baseUrl = "http://ec2-34-226-208-118.compute-1.amazonaws.com:3000";
+const baseUrl = process.env.REACT_APP_API_URL;
 
 function App() {
   const [videos, setVideos] = useState([]);
-  const [search, setNewSearch] = useState("");
-
-  useEffect(() => {
-    fetch(`${baseUrl}`)
-      .then((response) => response.json())
-      .then((data) => setVideos(data))
-      .catch((error) => console.error("Error fetching videos:", error));
-  }, []);
+  const [search, setSearch] = useState("");
 
   const handleAddVideo = (newVideo) => {
     fetch(`${baseUrl}`, {
@@ -27,20 +20,27 @@ function App() {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Video added successfully with ID:", data.id);
         console.log("Server Response:", data);
+        refreshVideoList();
       })
       .catch((error) => console.error("Error adding video:", error));
   };
 
-  const handleRemove = async (id) => {
+  const refreshVideoList = () => {
+    fetch(`${baseUrl}`)
+      .then((response) => response.json())
+      .then((data) => setVideos(data))
+      .catch((error) => console.error("Error fetching videos:", error));
+  };
+
+  const handleVote = async (id, type) => {
     try {
-      const response = await fetch(`${baseUrl}/${id}`, {
-        method: "DELETE",
+      const response = await fetch(`${baseUrl}/rating${type}/${id}`, {
+        method: "PUT",
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to delete video.";
+        let errorMessage = `Failed to ${type} the video.`;
 
         try {
           const errorData = await response.json();
@@ -53,24 +53,22 @@ function App() {
 
         throw new Error(errorMessage);
       }
+
+      refreshVideoList();
     } catch (error) {
-      console.error("Error deleting video:", error.message);
+      console.error(`Error ${type} the video:`, error.message);
     }
   };
 
-  // const handleSearch = (event) => {
-  //   const newSearch = event.target.value;
-  //   setNewSearch(newSearch);
-  // };
+  useEffect(() => {
+    refreshVideoList();
+  }, []);
 
   return (
     <div className="App">
-      <Header
-        search={search}
-        onSearch={(newSearch) => setNewSearch(newSearch)}
-      />
+      <Header search={search} onSearch={(newSearch) => setSearch(newSearch)} />
       <AddVideo onAddVideo={handleAddVideo} />
-      <VideoCards videos={videos} onRemove={handleRemove} search={search} />
+      <VideoCards videos={videos} onVote={handleVote} />
     </div>
   );
 }
