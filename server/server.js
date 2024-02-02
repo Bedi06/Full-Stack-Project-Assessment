@@ -29,17 +29,9 @@ app
     console.error("Server error:", err);
   });
 
-// GET "/"
 app.get("/", async (req, res) => {
-  const { order } = req.query;
-  let orderBy = "rating DESC";
-
-  if (order === "asc") {
-    orderBy = "rating ASC";
-  }
-
   try {
-    const result = await pool.query(`SELECT * FROM videos ORDER BY ${orderBy}`);
+    const result = await pool.query("SELECT * FROM videos");
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching videos:", error);
