@@ -7,26 +7,36 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2 on level-300 branch push
+    name: Deploy to EC2 on ec2-github-actions branch push
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout the files
         uses: actions/checkout@v4
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "16.x"
+          node-version: "20.x"
+
+      - name: check dir
+        run: pwd
+      - name: Install Dependencies
+        working-directory: ./server
+        run: npm install
       - name: Install npm dependencies
+        working-directory: ./server
         run: npm install
       - name: Run build task
+        working-directory: ./server
         run: npm run build --if-present
-      - name: Deploy to Server
-        uses: easingthemes/ssh-deploy@main
+
+      - name: rsync deployments
+        uses: burnett01/rsync-deployments@5.1
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          ARGS: "-rlgoDzvc -i --delete"
-          SOURCE: "./server/*"
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+          switches: -avzr --delete
+
+          path: ./server/server.js
+          remote_path: ${{secrets.TARGET_DIR}}
+          remote_host: ${{ secrets.HOST_DNS }}
+          remote_user: ${{ secrets.USERNAME }}
+          remote_key: "${{ secrets.EC2_SSH_KEY }}"
