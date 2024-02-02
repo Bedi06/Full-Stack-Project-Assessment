@@ -24,7 +24,7 @@ function VideoCard({
 
     (async () => {
       try {
-        const response = await fetch(`${apiUrl}/upvotes/${id}`, {
+        const response = await fetch(`${apiUrl}/${id}/upvotes`, {
           method: "POST",
         });
 
@@ -44,7 +44,7 @@ function VideoCard({
 
     (async () => {
       try {
-        const response = await fetch(`${apiUrl}/downvotes/${id}`, {
+        const response = await fetch(`${apiUrl}/${id}/downvotes`, {
           method: "POST",
         });
 
