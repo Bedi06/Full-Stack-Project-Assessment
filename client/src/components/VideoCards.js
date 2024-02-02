@@ -95,10 +95,19 @@ function VideoCard({
     </div>
   );
 }
-function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
+function VideoCards({
+  videos,
+  onRemove,
+  search,
+  onUpVote,
+  onDownVote,
+  setVideos,
+}) {
   const [sortOrder, setSortOrder] = useState("desc");
 
   const toggleSortOrder = () => {
+    const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
+
     const sortedVideos = [...videos]
       .filter((video) =>
         video.title.toLowerCase().includes(search.toLowerCase())
@@ -107,7 +116,7 @@ function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
         const votesA = (a.upvotes || 0) - (a.downvotes || 0);
         const votesB = (b.upvotes || 0) - (b.downvotes || 0);
 
-        if (sortOrder === "asc") {
+        if (newSortOrder === "asc") {
           return votesA - votesB; // Ascending order
         } else {
           return votesB - votesA; // Descending order
@@ -116,7 +125,11 @@ function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
 
     console.log("Filtered Videos:", sortedVideos);
 
-    setSortOrder(sortedVideos);
+    // Update the state in App.js using setVideos
+    setVideos(sortedVideos);
+
+    // Update the sortOrder state in VideoCards.js
+    setSortOrder(newSortOrder);
   };
 
   return (

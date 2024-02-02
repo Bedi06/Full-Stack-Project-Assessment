@@ -108,6 +108,7 @@ function App() {
         search={search}
         onUpVote={handleUpVote}
         onDownVote={handleDownVote}
+        setVideos={setVideos}
       />
     </div>
   );
