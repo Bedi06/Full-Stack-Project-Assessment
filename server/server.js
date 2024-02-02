@@ -89,11 +89,13 @@ app.post("/", async (req, res) => {
       message: "Invalid input. Video could not be saved.",
     });
   }
+
   try {
     const result = await pool.query(
-      "INSERT INTO videos (title, url, rating) VALUES ($1, $2, $3) RETURNING id",
-      [title, url, 0]
+      "INSERT INTO videos (title, url, upvotes, downvotes) VALUES ($1, $2, $3, $4) RETURNING id",
+      [title, url, 0, 0]
     );
+
     const newId = result.rows[0].id;
 
     res.status(201).json({ id: newId });
@@ -104,8 +106,35 @@ app.post("/", async (req, res) => {
   }
 });
 
+app.post("/:id/upvotes", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await pool.query(
+      "UPDATE videos SET upvotes = upvotes + 1 WHERE id=$1 RETURNING *",
+      [id]
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error updating upvotes:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+app.post("/:id/downvotes", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await pool.query(
+      "UPDATE videos SET downvotes = downvotes + 1 WHERE id=$1 RETURNING *",
+      [id]
+    );
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Error updating downvotes:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 app.delete("/:id", async (req, res) => {
-  const id = req.body.id;
+  const id = req.params.id;
   try {
     const deletedVideo = await pool.query("DELETE FROM videos WHERE id=$1", [
       id,

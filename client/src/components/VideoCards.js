@@ -2,16 +2,61 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faThumbsUp, faThumbsDown } from "@fortawesome/free-solid-svg-icons";
 
-function VideoCard({ title, url, rating, onRemove }) {
-  const videoId = url.split("v=")[1];
-  const [votes, setVotes] = useState(rating);
+function VideoCard({
+  id,
+  title,
+  url,
+  upvotes,
+  downvotes,
+  onRemove,
+  onUpVote,
+  onDownVote,
+}) {
+  const [upVoteCount, setUpVoteCount] = useState(upvotes);
+  const [downVoteCount, setDownVoteCount] = useState(downvotes);
 
   const handleUpVote = () => {
-    setVotes(votes + 1);
+    setUpVoteCount(upVoteCount + 1);
+    onUpVote(id);
+    console.log("Upvoting video..." + id);
+
+    (async () => {
+      try {
+        // Make an API request to save the upvote
+        const response = await fetch(`baseUrl/upvotes/${id}`, {
+          method: "POST",
+        });
+
+        if (!response.ok) {
+          // Handle server-side errors
+          throw new Error("Failed to upvote video");
+        }
+      } catch (error) {
+        console.error("Error upvoting video:", error.message);
+        // Handle client-side errors (e.g., network issues)
+      }
+    })();
   };
 
   const handleDownVote = () => {
-    setVotes(votes - 1);
+    setDownVoteCount(downVoteCount + 1);
+    onDownVote(id);
+    console.log("Downvoting video..." + id);
+
+    (async () => {
+      try {
+        const response = await fetch(`http://your-server-url/downvotes/${id}`, {
+          method: "POST",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to downvote video");
+        }
+      } catch (error) {
+        console.error("Error downvoting video:", error.message);
+        // Handle client-side errors (e.g., network issues)
+      }
+    })();
   };
 
   return (
@@ -20,7 +65,7 @@ function VideoCard({ title, url, rating, onRemove }) {
         <h3 className="video-title">{title}</h3>
         <div className="video-container">
           <iframe
-            src={`https://www.youtube.com/embed/${videoId}`}
+            src={`https://www.youtube.com/embed/${url.split("v=")[1]}`}
             title={title}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -28,11 +73,12 @@ function VideoCard({ title, url, rating, onRemove }) {
           ></iframe>
         </div>
         <div className="video-rating">
-          <p>Rating: {votes}</p>
+          <p>Upvotes: {upVoteCount}</p>
           <div className="vote-buttons">
             <button onClick={handleUpVote}>
               <FontAwesomeIcon icon={faThumbsUp} />
             </button>
+            <p>Downvotes: {downVoteCount}</p>
             <button onClick={handleDownVote}>
               <FontAwesomeIcon icon={faThumbsDown} />
             </button>
@@ -42,7 +88,7 @@ function VideoCard({ title, url, rating, onRemove }) {
         <button
           type="button"
           className="btn btn-secondary btn-sm remove-button"
-          onClick={() => onRemove(videoId)}
+          onClick={() => onRemove(id)}
         >
           Remove
         </button>
@@ -51,8 +97,9 @@ function VideoCard({ title, url, rating, onRemove }) {
   );
 }
 
-function VideoCards({ videos, onRemove, search }) {
+function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
   const [sortOrder, setSortOrder] = useState("desc");
+  console.log("Type of videos:", typeof videos);
 
   const toggleSortOrder = () => {
     setSortOrder(sortOrder === "asc" ? "desc" : "asc"); // Toggle sorting order
@@ -60,13 +107,15 @@ function VideoCards({ videos, onRemove, search }) {
   const filteredVideos = videos
     .filter((video) => video.title.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
+      const votesA = a.upvotes - a.downvotes;
+      const votesB = b.upvotes - b.downvotes;
+
       if (sortOrder === "asc") {
-        return a.rating - b.rating; // Ascending order
+        return votesA - votesB; // Ascending order
       } else {
-        return b.rating - a.rating; // Descending order
+        return votesB - votesA; // Descending order
       }
     });
-
   console.log("Filtered Videos:", filteredVideos);
 
   return (
@@ -80,8 +129,11 @@ function VideoCards({ videos, onRemove, search }) {
             key={video.id}
             title={video.title}
             url={video.url}
-            rating={video.rating}
-            onRemove={onRemove}
+            upvotes={video.upvotes}
+            downvotes={video.downvotes}
+            onRemove={() => onRemove(video.id)}
+            onUpVote={onUpVote}
+            onDownVote={onDownVote}
           />
         ))}
       </div>
