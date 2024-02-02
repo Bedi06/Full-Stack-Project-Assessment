@@ -4,7 +4,7 @@ import Header from "./components/Header";
 import AddVideo from "./components/AddVideo";
 import VideoCards from "./components/VideoCards";
 
-const baseUrl = "http://ec2-34-226-208-118.compute-1.amazonaws.com:3000";
+const baseUrl = "http://ec2-54-89-4-250.compute-1.amazonaws.com:3000";
 
 function App() {
   const [videos, setVideos] = useState([]);
@@ -17,20 +17,26 @@ function App() {
       .catch((error) => console.error("Error fetching videos:", error));
   }, []);
 
-  const handleAddVideo = (newVideo) => {
-    fetch(`${baseUrl}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(newVideo),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Video added successfully with ID:", data.id);
-        console.log("Server Response:", data);
-      })
-      .catch((error) => console.error("Error adding video:", error));
+  const handleAddVideo = async (newVideo) => {
+    try {
+      const response = await fetch(`${baseUrl}/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newVideo),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add video");
+      }
+
+      const addedVideo = await response.json();
+
+      setVideos((prevVideos) => [...prevVideos, addedVideo]);
+    } catch (error) {
+      console.error("Error adding video:", error.message);
+    }
   };
 
   const handleRemove = async (id) => {
@@ -40,28 +46,14 @@ function App() {
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to delete video.";
-
-        try {
-          const errorData = await response.json();
-          if (errorData && errorData.message) {
-            errorMessage += ` Server Error: ${errorData.message}`;
-          }
-        } catch (jsonError) {
-          console.error("Error parsing JSON error response:", jsonError);
-        }
-
-        throw new Error(errorMessage);
+        throw new Error("Failed to delete video");
       }
+
+      setVideos((prevVideos) => prevVideos.filter((video) => video.id !== id));
     } catch (error) {
       console.error("Error deleting video:", error.message);
     }
   };
-
-  // const handleSearch = (event) => {
-  //   const newSearch = event.target.value;
-  //   setNewSearch(newSearch);
-  // };
 
   return (
     <div className="App">
