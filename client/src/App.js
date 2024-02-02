@@ -55,6 +55,46 @@ function App() {
     }
   };
 
+  const handleUpVote = async (id) => {
+    try {
+      const response = await fetch(`${baseUrl}/${id}/upvotes`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upvote video");
+      }
+
+      setVideos((prevVideos) =>
+        prevVideos.map((video) =>
+          video.id === id ? { ...video, upvotes: video.upvotes + 1 } : video
+        )
+      );
+    } catch (error) {
+      console.error("Error upvoting video:", error.message);
+    }
+  };
+
+  const handleDownVote = async (id) => {
+    try {
+      const response = await fetch(`${baseUrl}/${id}/downvotes`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to downvote video");
+      }
+
+      setVideos((prevVideos) =>
+        prevVideos.map((video) =>
+          video.id === id ? { ...video, downvotes: video.downvotes + 1 } : video
+        )
+      );
+    } catch (error) {
+      console.error("Error downvoting video:", error.message);
+    }
+  };
+
   return (
     <div className="App">
       <Header
@@ -62,7 +102,13 @@ function App() {
         onSearch={(newSearch) => setNewSearch(newSearch)}
       />
       <AddVideo onAddVideo={handleAddVideo} />
-      <VideoCards videos={videos} onRemove={handleRemove} search={search} />
+      <VideoCards
+        videos={videos}
+        onRemove={handleRemove}
+        search={search}
+        onUpVote={handleUpVote}
+        onDownVote={handleDownVote}
+      />
     </div>
   );
 }

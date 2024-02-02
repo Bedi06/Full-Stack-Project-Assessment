@@ -15,7 +15,8 @@ function VideoCard({
   const [upVoteCount, setUpVoteCount] = useState(upvotes);
   const [downVoteCount, setDownVoteCount] = useState(downvotes);
 
-  const apiUrl = process.env.REACT_APP_URL;
+  const apiUrl = "http://ec2-54-89-4-250.compute-1.amazonaws.com:3000";
+  // process.env.REACT_APP_URL;
   const handleUpVote = () => {
     setUpVoteCount(upVoteCount + 1);
     onUpVote(id);
@@ -23,18 +24,15 @@ function VideoCard({
 
     (async () => {
       try {
-        // Make an API request to save the upvote
         const response = await fetch(`${apiUrl}/upvotes/${id}`, {
           method: "POST",
         });
 
         if (!response.ok) {
-          // Handle server-side errors
           throw new Error("Failed to upvote video");
         }
       } catch (error) {
         console.error("Error upvoting video:", error.message);
-        // Handle client-side errors (e.g., network issues)
       }
     })();
   };
@@ -66,7 +64,7 @@ function VideoCard({
         <h3 className="video-title">{title}</h3>
         <div className="video-container">
           <iframe
-            src={`https://www.youtube.com/embed/${url.split("v=")[1]}`}
+            src={url && `https://www.youtube.com/embed/${url.split("v=")[1]}`}
             title={title}
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -99,11 +97,8 @@ function VideoCard({
 }
 function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
   const [sortOrder, setSortOrder] = useState("desc");
-  const [sortedVideos, setSortedVideos] = useState(videos);
 
   const toggleSortOrder = () => {
-    const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
-
     const sortedVideos = [...videos]
       .filter((video) =>
         video.title.toLowerCase().includes(search.toLowerCase())
@@ -112,15 +107,16 @@ function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
         const votesA = (a.upvotes || 0) - (a.downvotes || 0);
         const votesB = (b.upvotes || 0) - (b.downvotes || 0);
 
-        if (newSortOrder === "asc") {
-          return votesA - votesB;
+        if (sortOrder === "asc") {
+          return votesA - votesB; // Ascending order
         } else {
-          return votesB - votesA;
+          return votesB - votesA; // Descending order
         }
       });
 
-    setSortOrder(newSortOrder);
-    setSortedVideos(sortedVideos);
+    console.log("Filtered Videos:", sortedVideos);
+
+    setSortOrder(sortedVideos);
   };
 
   return (
@@ -129,16 +125,17 @@ function VideoCards({ videos, onRemove, search, onUpVote, onDownVote }) {
         Sort {sortOrder === "asc" ? "Ascending" : "Descending"}
       </button>
       <div className="video-grid">
-        {sortedVideos.map((video) => (
+        {videos.map((video) => (
           <VideoCard
             key={video.id}
             title={video.title}
             url={video.url}
             upvotes={video.upvotes}
             downvotes={video.downvotes}
+            id={video.id}
             onRemove={() => onRemove(video.id)}
-            onUpVote={onUpVote}
-            onDownVote={onDownVote}
+            onUpVote={() => onUpVote(video.id)}
+            onDownVote={() => onDownVote(video.id)}
           />
         ))}
       </div>
