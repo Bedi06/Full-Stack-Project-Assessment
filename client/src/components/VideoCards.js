@@ -16,7 +16,6 @@ function VideoCard({
   const [downVoteCount, setDownVoteCount] = useState(downvotes);
 
   const apiUrl = "http://ec2-54-89-4-250.compute-1.amazonaws.com:3000";
-  // process.env.REACT_APP_URL;
   const handleUpVote = () => {
     setUpVoteCount(upVoteCount + 1);
     onUpVote(id);
@@ -53,7 +52,6 @@ function VideoCard({
         }
       } catch (error) {
         console.error("Error downvoting video:", error.message);
-        // Handle client-side errors (e.g., network issues)
       }
     })();
   };
@@ -72,15 +70,23 @@ function VideoCard({
           ></iframe>
         </div>
         <div className="video-rating">
-          <p>Upvotes: {upVoteCount}</p>
-          <div className="vote-buttons">
-            <button onClick={handleUpVote}>
-              <FontAwesomeIcon icon={faThumbsUp} />
-            </button>
-            <p>Downvotes: {downVoteCount}</p>
-            <button onClick={handleDownVote}>
-              <FontAwesomeIcon icon={faThumbsDown} />
-            </button>
+          <div className="upvote">
+            <p>Upvotes: {upVoteCount}</p>
+            <div className="vote-buttons">
+              <button onClick={handleUpVote}>
+                <FontAwesomeIcon icon={faThumbsUp} />
+              </button>
+            </div>
+          </div>
+          <div className="downvote">
+            {" "}
+            <div className="vote-buttons">
+              <p>Downvotes: {downVoteCount}</p>
+
+              <button onClick={handleDownVote}>
+                <FontAwesomeIcon icon={faThumbsDown} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -117,18 +123,16 @@ function VideoCards({
         const votesB = (b.upvotes || 0) - (b.downvotes || 0);
 
         if (newSortOrder === "asc") {
-          return votesA - votesB; // Ascending order
+          return votesA - votesB;
         } else {
-          return votesB - votesA; // Descending order
+          return votesB - votesA;
         }
       });
 
     console.log("Filtered Videos:", sortedVideos);
 
-    // Update the state in App.js using setVideos
     setVideos(sortedVideos);
 
-    // Update the sortOrder state in VideoCards.js
     setSortOrder(newSortOrder);
   };
 
