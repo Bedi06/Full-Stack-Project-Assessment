@@ -1,6 +1,6 @@
 .App {
   text-align: center;
-  background-color: #496375;
+  background-color: #fffffffc;
 }
 h2 {
   margin-top: 2em;
@@ -30,12 +30,18 @@ h2 {
   gap: 10px;
 }
 .video-card {
-  border: 1px solid #183b68;
+  border: 1px solid #719ad0;
   border-radius: 10px;
-  box-shadow: 0 4px 8px #0d20521a;
+  box-shadow: 0 6px 8px #adb9e31a;
   padding: 10px;
   width: 25rem;
-  background-color: #637e91;
+  background-color: #cfd9e9;
+}
+.submit {
+  background-color: #719ad0;
+}
+.search {
+  background-color: #afc1d7;
 }
 .video-card:hover {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
@@ -75,6 +81,7 @@ h2 {
 .navbar {
   display: flex;
   justify-content: space-between;
+  padding: 1rem 1rem;
 }
 
 @media screen and (max-width: 768px) {

@@ -9,7 +9,7 @@ function Header({ search, onSearch }) {
   return (
     <nav
       className="navbar navbar-light  navbar-expand-lg "
-      style={{ backgroundColor: "#3F647F" }}
+      style={{ backgroundColor: "#cfd9e9" }}
     >
       <span className="navbar-brand">Video Recommendation</span>
       <form className="form-inline">
@@ -21,7 +21,7 @@ function Header({ search, onSearch }) {
           value={search}
           onChange={handleSearch}
         />
-        <button className="btn btn-outline-success my-2 my-sm-0" type="submit">
+        <button className="btn search my-2 my-sm-0" type="submit">
           Search
         </button>
       </form>
