@@ -17,6 +17,10 @@ function App() {
       .catch((error) => console.error("Error fetching videos:", error));
   }, []);
 
+  const filteredVideos = videos.filter((video) =>
+    video.title.toLowerCase().includes(search.toLowerCase())
+  );
+
   const handleAddVideo = async (newVideo) => {
     try {
       const response = await fetch(`${baseUrl}/`, {
@@ -103,7 +107,7 @@ function App() {
       />
       <AddVideo onAddVideo={handleAddVideo} />
       <VideoCards
-        videos={videos}
+        videos={filteredVideos}
         onRemove={handleRemove}
         search={search}
         onUpVote={handleUpVote}
