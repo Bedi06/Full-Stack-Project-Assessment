@@ -49,8 +49,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker stop my-vr-docker
-            docker rm my-vr-docker
+            docker stop my-vr-docker || true
+            docker rm my-vr-docker || true
 
       - name: Run container on VM server
         uses: appleboy/ssh-action@master
