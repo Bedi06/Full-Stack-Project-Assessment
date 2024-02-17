@@ -42,7 +42,7 @@ jobs:
             docker system prune -a -f
             docker pull ${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}
 
-      - name: Identify and stop previous container
+      - name: Identify and stop previous container by name
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_DNS}}
