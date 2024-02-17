@@ -3,40 +3,71 @@ name: Push-to-EC2
 on:
   push:
     branches:
-      - level-300
+      - docker-backend
 
 jobs:
   deploy:
-    name: Deploy to EC2 on ec2-github-actions branch push
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout the files
-        uses: actions/checkout@v4
-      - name: Install Node.js
-        uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create tag for image
+        id: create_tag
+        run: |
+          TAG={latest}
+          echo ::set-output name=tag::$TAG
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-vr-docker:${{ steps.create_tag.outputs.tag }} .
+          cd ..
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
         with:
-          node-version: "20.x"
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: check dir
-        run: pwd
-      - name: Install Dependencies
-        working-directory: ./server
-        run: npm install
-      - name: Install npm dependencies
-        working-directory: ./server
-        run: npm install
-      - name: Run build task
-        working-directory: ./server
-        run: npm run build --if-present
+      - name: Push Docker image to Docker Hub
+        run: |
+          docker push ${{secrets.DOCKER_USERNAME}}/video-server:${{ steps.create_tag.outputs.tag }}
 
-      - name: rsync deployments
-        uses: burnett01/rsync-deployments@5.1
+      - name: Clear images and pull new image
+        uses: appleboy/ssh-action@master
         with:
-          switches: -avzr --delete
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY  }}
+          script: |
+            docker system prune -a -f
+            docker pull ${{secrets.DOCKER_USERNAME}}/video-server:${{ steps.create_tag.outputs.tag }}
 
-          path: ./server/server.js
-          remote_path: ${{secrets.TARGET_DIR}}
-          remote_host: ${{ secrets.HOST_DNS }}
-          remote_user: ${{ secrets.USERNAME }}
-          remote_key: "${{ secrets.EC2_SSH_KEY }}"
+      - name: Identify and stop previous container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_DNS}}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            CONTAINER_ID=$(docker ps -q --filter "ancestor=my-vr-docker/video-server:${{ steps.create_tag.outputs.tag }}")
+            if [ ! -z "$CONTAINER_ID" ]; then
+              docker stop $CONTAINER_ID
+              docker rm $CONTAINER_ID
+            fi
+
+      - name: Run container on VM server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_DNS}}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker run -d \
+              -e DB_USER=${{ secrets.RDS_USER }} \
+              -e DB_HOST=${{ secrets.RDS_HOST }} \
+              -e DB_PASSWORD=${{ secrets.RDS_PASSWORD }} \
+              -e DB_NAME=${{ secrets.RDS_NAME }} \
+              -e DB_PORT=${{ secrets.RDS_PORT }} \
+              -p 4000:3000 \
+              ${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}
