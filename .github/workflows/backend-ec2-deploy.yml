@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - docker-backend
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,7 +14,7 @@ jobs:
       - name: Create tag for image
         id: create_tag
         run: |
-          TAG={latest}
+          TAG=latest
           echo ::set-output name=tag::$TAG
 
       - name: Build Docker image
@@ -31,7 +30,7 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: |
-          docker push ${{secrets.DOCKER_USERNAME}}/video-server:${{ steps.create_tag.outputs.tag }}
+          docker push ${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}
 
       - name: Clear images and pull new image
         uses: appleboy/ssh-action@master
@@ -41,7 +40,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY  }}
           script: |
             docker system prune -a -f
-            docker pull ${{secrets.DOCKER_USERNAME}}/video-server:${{ steps.create_tag.outputs.tag }}
+            docker pull ${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}
 
       - name: Identify and stop previous container
         uses: appleboy/ssh-action@master
@@ -50,7 +49,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            CONTAINER_ID=$(docker ps -q --filter "ancestor=my-vr-docker/video-server:${{ steps.create_tag.outputs.tag }}")
+            CONTAINER_ID=$(docker ps -q --filter "ancestor=${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}")
             if [ ! -z "$CONTAINER_ID" ]; then
               docker stop $CONTAINER_ID
               docker rm $CONTAINER_ID
