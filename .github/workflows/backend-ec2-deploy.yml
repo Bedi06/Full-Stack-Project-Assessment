@@ -49,11 +49,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            CONTAINER_ID=$(docker ps -q --filter "ancestor=${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}")
-            if [ ! -z "$CONTAINER_ID" ]; then
-              docker stop $CONTAINER_ID
-              docker rm $CONTAINER_ID
-            fi
+            docker stop my-vr-docker
+            docker rm my-vr-docker
 
       - name: Run container on VM server
         uses: appleboy/ssh-action@master
@@ -69,4 +66,5 @@ jobs:
               -e DB_NAME=${{ secrets.RDS_NAME }} \
               -e DB_PORT=${{ secrets.RDS_PORT }} \
               -p 4000:3000 \
+              --name my-vr-docker \
               ${{secrets.DOCKER_USERNAME}}/my-vr-docker:${{ steps.create_tag.outputs.tag }}
