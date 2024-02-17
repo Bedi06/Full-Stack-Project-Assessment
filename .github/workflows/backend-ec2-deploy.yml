@@ -19,6 +19,7 @@ jobs:
 
       - name: Build Docker image
         run: |
+          pwd
           docker build -t ${{ secrets.DOCKER_USERNAME }}/my-vr-docker:${{ steps.create_tag.outputs.tag }} .
           cd ..
 
