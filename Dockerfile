@@ -2,7 +2,7 @@
 FROM node:20-alpine
 
 # Set the working directory in the container
-WORKDIR /my-vr-ap/server
+WORKDIR /my-vr-docker/server
 # Copy package.json and package-lock.json to the working directory
 COPY server/package*.json ./
 
@@ -12,14 +12,8 @@ RUN npm install
 # Bundle app source
 COPY ./server .
 
-# Copy .env file into container
-COPY .env ./
-
 # Expose the port the app runs on
 EXPOSE 3000
-
-# Set environment variables from .env file
-ENV $(cat .env | xargs)
 
 # Define the command to run your app
 CMD ["node", "server.js"]
