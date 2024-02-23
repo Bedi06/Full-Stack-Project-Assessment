@@ -23,7 +23,6 @@ resource "aws_s3_bucket" "my_vr_tf" {
 
 resource "aws_s3_bucket_ownership_controls" "my_vr_tf_ownership" {
   bucket = aws_s3_bucket.my_vr_tf.id
-
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -85,5 +84,13 @@ resource "aws_s3_bucket_website_configuration" "my_vr_tf_website" {
     key = "error.html"
   }
 
-  
+}
+
+resource "aws_s3_object" "my_vr_tf_object" {
+  for_each = fileset("./client/build", "**/*")
+
+  bucket = aws_s3_bucket.my_vr_tf.id
+  key    = each.value
+  source = "./folder_path/${each.value}"
+  acl    = "public-read"
 }
