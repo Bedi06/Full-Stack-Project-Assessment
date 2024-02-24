@@ -9,4 +9,5 @@ terraform.tfstate.backup
 .terraform.tfstate.lock.info
 .DS_Store
 .terraform/
-
+.tf
+.tfvars

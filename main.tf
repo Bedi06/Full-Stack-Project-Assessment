@@ -13,6 +13,7 @@ provider "aws" {
 
 resource "aws_s3_bucket" "my_vr_tf" {
   bucket = "my-vr-tf"
+
    force_destroy = false
 
   tags = {
@@ -24,7 +25,7 @@ resource "aws_s3_bucket" "my_vr_tf" {
 resource "aws_s3_bucket_ownership_controls" "my_vr_tf_ownership" {
   bucket = aws_s3_bucket.my_vr_tf.id
   rule {
-    object_ownership = "BucketOwnerPreferred"
+    object_ownership = "ObjectWriter"
   }
 }
 
@@ -40,22 +41,20 @@ resource "aws_s3_bucket_public_access_block" "my_vr_tf_block" {
   ignore_public_acls      = false
   restrict_public_buckets = false
 }
+
 resource "aws_s3_bucket_policy" "my_vr_tf_policy" {
   bucket = aws_s3_bucket.my_vr_tf.id
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::my-vr-tf/*"
-        }
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = "*"
+        Action    = "s3:GetObject"
+        Resource  = "${aws_s3_bucket.my_vr_tf.arn}/*"
+      }
     ]
-}
-EOF
+  })
   
 }
 
@@ -80,10 +79,6 @@ resource "aws_s3_bucket_website_configuration" "my_vr_tf_website" {
     suffix = "index.html"
   }
 
-  error_document {
-    key = "error.html"
-  }
-
 }
 
 resource "aws_s3_object" "my_vr_tf_object" {
@@ -91,6 +86,7 @@ resource "aws_s3_object" "my_vr_tf_object" {
 
   bucket = aws_s3_bucket.my_vr_tf.id
   key    = each.value
-  source = "./folder_path/${each.value}"
+  source = "./client/build/${each.value}"
   acl    = "public-read"
 }
+
