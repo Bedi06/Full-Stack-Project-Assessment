@@ -5,12 +5,10 @@ terraform {
     }
   }
 }
-
 provider "aws" {
   region  = "eu-west-2"
 
 }
-
 resource "aws_s3_bucket" "my_vr_tf" {
   bucket = "my-vr-tf"
 
@@ -57,7 +55,6 @@ resource "aws_s3_bucket_policy" "my_vr_tf_policy" {
   })
   
 }
-
 
 resource "aws_s3_bucket_cors_configuration" "my_vr_tf_cors" {
   bucket = aws_s3_bucket.my_vr_tf.bucket

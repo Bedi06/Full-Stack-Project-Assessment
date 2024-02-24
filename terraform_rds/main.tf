@@ -2,6 +2,14 @@ provider "aws" {
   region = "us-east-1"  
 }
 
+variable "db_password" {
+  type    = string
+}
+
+variable "master_username" {
+  type    = string
+}
+
 resource "aws_db_instance" "my_vr_rds" {
   identifier = "my-vr-rds"
   allocated_storage    = 20
@@ -10,8 +18,8 @@ resource "aws_db_instance" "my_vr_rds" {
   engine               = "postgres"
   engine_version       = "15.5"
   instance_class       = "db.t3.micro"
-  db_name              = "mydatabase"
-  username             = var.db_username
+  db_name              = "mydb"
+  username             = var.master_username
   password             = var.db_password
   parameter_group_name = "default.postgres15"
   skip_final_snapshot  = true
@@ -25,8 +33,10 @@ resource "aws_db_instance" "my_vr_rds" {
   }
 }
 
+
+
 resource "aws_security_group" "instance" {
-  name = "terraform-example-instance"
+  name = "terraform-vr-instance"
   
   ingress {
     from_port   = 5432
@@ -34,14 +44,12 @@ resource "aws_security_group" "instance" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+ egress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+   }
+ 
 }
 
-resource "null_resource" "create_table" {
-  provisioner "local-exec" {
-    command = <<-EOF
-      export PGPASSWORD=${var.db_password}
-      psql -h ${aws_db_instance.my_db_instance.address} -U ${var.db_username} -d mydatabase -c "CREATE TABLE videos (id SERIAL PRIMARY KEY, name VARCHAR(255), url VARCHAR(255), upvotes INT DEFAULT 0, downvotes INT DEFAULT 0);"
-    EOF
-  }
-  depends_on = [aws_db_instance.my_db_instance]
-}
